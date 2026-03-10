@@ -1,4 +1,4 @@
--- [[ DAPZX ATOMIC | FISHZAR V14.1.0 - HYBRID FIXED ]]
+-- [[ DAPZX ATOMIC | FISHZAR V14.1.0 - FINAL FIXED ]]
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -8,19 +8,17 @@ local AnimController = require(FishingSystem.FishingModules:WaitForChild("Animat
 
 _G.Config = {Farming = false, Delay = 3, WalkWater = false, Streamer = false}
 
--- [[ DATA PANCINGAN (DARI V1) ]]
+-- [[ DATA PANCINGAN ]]
 local FishingRods = {
     "Flimsy Rod", "Carbon Rod", "Fast Rod", "Long Rod", "Great Rod", 
     "Sovereign Rod", "Mythical Rod", "Magma Rod", "Ice Rod", "Reinforced Rod"
-[span_4](start_span)}
+}
 
 -- [[ CORE SYSTEMS ]]
 local Systems = {
-    -- Logika Auto-Detect & Equip Rod[span_4](end_span)
     GetRod = function()
         local char = LocalPlayer.Character
         if not char then return nil end
-        
         for _, rodName in ipairs(FishingRods) do
             local rod = char:FindFirstChild(rodName) or LocalPlayer.Backpack:FindFirstChild(rodName)
             if rod then 
@@ -33,27 +31,20 @@ local Systems = {
 
     Mancing = function()
         if not _G.Config.Farming or not LocalPlayer.Character then return end
-        
         local tool = Systems.GetRod()
         if not tool then return end
-        
         local root = LocalPlayer.Character.HumanoidRootPart
         local castPos = root.Position + (root.CFrame.LookVector * 15)
-        
-        [span_5](start_span)AnimController:Play("PrepareCast", 0.1)[span_5](end_span)
-        [span_6](start_span)FishingSystem.CastReplication:FireServer(castPos, root.Position, tool.Name, 99.5)[span_6](end_span)
-        
+        AnimController:Play("PrepareCast", 0.1)
+        FishingSystem.CastReplication:FireServer(castPos, root.Position, tool.Name, 99.5)
         task.wait(1.5)
-        [span_7](start_span)FishingSystem.PrecalcFish:InvokeServer()[span_7](end_span)
+        FishingSystem.PrecalcFish:InvokeServer()
         task.wait(0.5)
-        
-        [span_8](start_span)FishingSystem.ReplicatePullAlert:FireServer("rbxassetid://76503247176490")[span_8](end_span)
-        
-        [span_9](start_span)task.wait(_G.Config.Delay)[span_9](end_span)
-        [span_10](start_span)FishingSystem.FishGiver:FireServer({ ["hookPosition"] = castPos })[span_10](end_span)
-        
+        FishingSystem.ReplicatePullAlert:FireServer("rbxassetid://76503247176490")
+        task.wait(_G.Config.Delay)
+        FishingSystem.FishGiver:FireServer({ ["hookPosition"] = castPos })
         task.wait(1.2)
-        [span_11](start_span)FishingSystem.CleanupCast:FireServer()[span_11](end_span)
+        FishingSystem.CleanupCast:FireServer()
     end,
 
     Security = function()
@@ -61,7 +52,7 @@ local Systems = {
             for _, p in pairs(Players:GetPlayers()) do
                 if p.Character and p.Character:FindFirstChild("Head") then
                     for _, v in pairs(p.Character.Head:GetChildren()) do
-                        [span_12](start_span)if v:IsA("BillboardGui") then v.Enabled = false end[span_12](end_span)
+                        if v:IsA("BillboardGui") then v.Enabled = false end
                     end
                 end
             end
@@ -74,7 +65,7 @@ local success, WindUI = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 end)
 
-if not success then return end
+if not success or not WindUI then return end
 
 local Window = WindUI:CreateWindow({
     Title = "DapzX Atomic V14.1", 
@@ -87,11 +78,7 @@ local InfoTab = Window:Tab({Title = "Info", Icon = "solar:info-circle-bold"})
 InfoTab:Section({Title = "📢 Latest Update: v14.1.0"})
 InfoTab:Paragraph({
     Title = "Recode Total by TheoXAtomic",
-    Desc = "Halo semua! Kami baru saja melakukan Recode Total pada sistem utama kami.\n\n" ..
-           "🚀 OPTIMASI SISTEM:\n" ..
-           "- Modular Architecture Aktif.\n" ..
-           "- Auto-Detect Rod (V1 Logic Integrated).\n" ..
-           "- Fixed Android Element Loading Issue."
+    Desc = "🚀 OPTIMASI SISTEM:\n- Modular Architecture Aktif.\n- Auto-Detect Rod (V1 Logic).\n- Fixed Android Element Loading Issue."
 })
 InfoTab:Section({Title = "Credits"})
 InfoTab:Label({Text = "Lead Developer: TheoXAtomic"})
@@ -111,15 +98,11 @@ FTab:Input({
 
 -- [[ LOOPS ]]
 task.spawn(function() 
-    while task.wait(0.5) do 
-        pcall(function() Systems.Mancing() end)
-    end 
+    while task.wait(0.5) do pcall(function() Systems.Mancing() end) end 
 end)
 
 task.spawn(function() 
-    while task.wait(0.1) do 
-        pcall(function() Systems.Security() end) 
-    end 
+    while task.wait(0.1) do pcall(function() Systems.Security() end) end 
 end)
 
 -- Walk on Water
@@ -129,3 +112,6 @@ RunService.Heartbeat:Connect(function()
         if root.Position.Y < 5 then root.Velocity = Vector3.new(0, 5, 0) end
     end
 end)
+
+-- [[ LOADSTRING UNTUK USER ]]
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/ENCXVRYN/Dapz-FISHZAR/refs/heads/main/fishzar.lua"))()
