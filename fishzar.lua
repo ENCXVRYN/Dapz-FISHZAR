@@ -1,4 +1,4 @@
- -- [[ DAPZX ATOMIC | FISHZAR V14.0.0 - OPTIMIZED ]]
+-- [[ DAPZX ATOMIC | FISHZAR V14.1.0 - HYBRID OPTIMIZED ]]
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -8,25 +8,62 @@ local AnimController = require(FishingSystem.FishingModules:WaitForChild("Animat
 
 _G.Config = {Farming = false, Delay = 3, WalkWater = false, Streamer = false}
 
+-- [[ DATA DARI V1: LIST PANCINGAN ]]
+local FishingRods = {
+    "Flimsy Rod", "Carbon Rod", "Fast Rod", "Long Rod", "Great Rod", 
+    "Sovereign Rod", "Mythical Rod", "Magma Rod", "Ice Rod", "Reinforced Rod"
+}
+
 -- [[ CORE SYSTEMS ]]
 local Systems = {
+    -- Logika Deteksi Pancingan Otomatis (Ganti Manual Tool V14 ke Otomatis V1)
+    GetRod = function()
+        local char = LocalPlayer.Character
+        if not char then return nil end
+        
+        -- Cek yang sedang dipegang
+        for _, rodName in ipairs(FishingRods) do
+            local rod = char:FindFirstChild(rodName)
+            if rod then return rod end
+        end
+        
+        -- Cek di Backpack
+        for _, rodName in ipairs(FishingRods) do
+            local rod = LocalPlayer.Backpack:FindFirstChild(rodName)
+            if rod then 
+                rod.Parent = char -- Otomatis equip jika ketemu
+                return rod 
+            end
+        end
+        
+        -- Fallback: Cari Tool apa saja jika list di atas tidak ada
+        return char:FindFirstChildWhichIsA("Tool") or LocalPlayer.Backpack:FindFirstChildWhichIsA("Tool")
+    end,
+
     Mancing = function()
         if not _G.Config.Farming or not LocalPlayer.Character then return end
-        local tool = LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
+        
+        local tool = Systems.GetRod() -- Menggunakan logika deteksi otomatis
         if not tool then return end
         
         local root = LocalPlayer.Character.HumanoidRootPart
         local castPos = root.Position + (root.CFrame.LookVector * 15)
         
+        -- Animasi Cast dari V14
         AnimController:Play("PrepareCast", 0.1)
         FishingSystem.CastReplication:FireServer(castPos, root.Position, tool.Name, 99.5)
+        
         task.wait(1.5)
         FishingSystem.PrecalcFish:InvokeServer()
         task.wait(0.5)
+        
+        -- Efek Suara/Alert dari V1
         FishingSystem.ReplicatePullAlert:FireServer("rbxassetid://76503247176490")
+        
         task.wait(_G.Config.Delay)
         FishingSystem.FishGiver:FireServer({ ["hookPosition"] = castPos })
-        task.wait(1.5)
+        
+        task.wait(1.2)
         FishingSystem.CleanupCast:FireServer()
     end,
 
@@ -43,49 +80,44 @@ local Systems = {
     end
 }
 
--- [[ UI SETUP WITH ERROR HANDLING ]]
+-- [[ UI SETUP ]]
 local success, WindUI = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 end)
 
-if not success or not WindUI then
-    warn("Gagal memuat WindUI. Pastikan koneksi internet stabil atau URL aktif.")
-    return
-end
+if not success then return end
 
 local Window = WindUI:CreateWindow({
-    Title = "DapzX Atomic V14", 
+    Title = "DapzX Atomic V14.1", 
     Icon = "solar:atom-bold", 
     Size = UDim2.fromOffset(580, 460)
 })
 
--- [[ TAB INFO & CHANGELOG ]]
+-- [[ TAB INFO ]]
 local InfoTab = Window:Tab({Title = "Info", Icon = "solar:info-circle-bold"})
-
-InfoTab:Section({Title = "📢 Latest Update: v14.0.0"})
+InfoTab:Section({Title = "📢 Update v14.1.0 (Hybrid)"})
 InfoTab:Paragraph({
-    Title = "Recode Total by TheoXAtomic",
-    Desc = "Halo semua! Kami baru saja melakukan Recode Total pada sistem utama kami.\n\n" ..
-           "OPTIMASI SISTEM:\n" ..
-           "- Modular Architecture: Fitur berjalan mandiri.\n" ..
-           "- Performance Boost: Fix Ping & FPS counter freeze.\n" ..
-           "- Fixed Streamer Mode: Nametag cleaner lebih ringan.\n" ..
-           "- Anti-Drown 2.0 & Walk on Water aktif.\n\n" ..
-           "SYSTEM FIXES:\n" ..
-           "- Fishing Stability: Logic Auto Farm anti-block.\n" ..
-           "- Integration: Tab Webhook kembali aktif.\n" ..
-           "- Security: Modul Anti-Staff responsif."
+    Title = "Changelog",
+    Desc = "- Added Auto-Detect Rod (Logic from V1)\n" ..
+           "- Automatic Equip System\n" ..
+           "- Fixed Android Element Loading Issue\n" ..
+           "- Optimized Fast Casting Speed"
 })
-
 InfoTab:Section({Title = "Credits"})
 InfoTab:Label({Text = "Lead Developer: TheoXAtomic"})
-InfoTab:Button({Title = "Copy Discord Link", Callback = function() setclipboard("https://discord.gg/getsades") end})
 
 -- [[ TAB FISHING ]]
 local FTab = Window:Tab({Title = "Fishing", Icon = "solar:fishing-rod-bold"})
-FTab:Section({Title = "Main Features"})
-FTab:Toggle({Title = "Auto Farm", Callback = function(s) _G.Config.Farming = s end})
-FTab:Input({Title = "Delay", Placeholder = "3.0", Callback = function(v) _G.Config.Delay = tonumber(v) or 3 end})
+FTab:Section({Title = "Main Controls"})
+FTab:Toggle({
+    Title = "Auto Farm (Auto Rod)", 
+    Callback = function(s) _G.Config.Farming = s end
+})
+FTab:Input({
+    Title = "Delay", 
+    Placeholder = "3.0", 
+    Callback = function(v) _G.Config.Delay = tonumber(v) or 3 end
+})
 
 -- [[ LOOPS ]]
 task.spawn(function() 
